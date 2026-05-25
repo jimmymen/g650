@@ -485,16 +485,80 @@ const CN_DICT = {
 // ============================================
 const CN_MAP = {};
 
+function escRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 function translate(text) {
-  let result = text.replace(/\\u003c/gi, '<').replace(/\\u003e/gi, '>');
-  // Sort entries by length (longest first) to match multi-word terms before single words
-  const entries = Object.entries(CN_DICT).sort((a, b) => b[0].length - a[0].length);
-  for (const [en, cn] of entries) {
-    const escaped = en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const re = new RegExp('\\b' + escaped + '\\b', 'gi');
-    result = result.replace(re, cn);
+  let r = text.replace(/\\u003c/gi, '<').replace(/\\u003e/gi, '>');
+  // Sort dictionary by length (longest first)
+  const ent = Object.entries(CN_DICT).sort((a, b) => b[0].length - a[0].length);
+
+  // Phase 1: translate question patterns
+  r = r
+    .replace(/^What are the requirements for (.+?)\?/i, '进行$1需要什么条件？')
+    .replace(/^What is the purpose of (.+?)\?/i, '$1的作用是什么？')
+    .replace(/^What is the difference between (.+?) and (.+?)\?/i, '$1和$2有什么区别？')
+    .replace(/^What are the (.+?) of (.+?)\?/i, '$2的$1有哪些？')
+    .replace(/^What is the location of (.+?)\?/i, '$1位于哪里？')
+    .replace(/^What happens when (.+?)\?/i, '当$1时会发生什么？')
+    .replace(/^What does (.+?) do\??/i, '$1的作用是什么？')
+    .replace(/^How does (.+?)\?/i, '$1如何工作？')
+    .replace(/^How many (.+?) are there\??/i, '有多少个$1？')
+    .replace(/^How is (.+?)\?/i, '$1是怎样的？')
+    .replace(/^When does (.+?)\?/i, '$1何时发生？')
+    .replace(/^When is (.+?)\?/i, '$1在什么时候？')
+    .replace(/^When should (.+?)\?/i, '何时应该$1？')
+    .replace(/^Where is (.+?)\?/i, '$1位于哪里？')
+    .replace(/^Where can (.+?) be found\??/i, '$1在哪里？')
+    .replace(/^Why does (.+?)\?/i, '为什么$1？')
+    .replace(/^Describe (.+)/i, '请描述$1')
+    .replace(/^Explain (.+)/i, '请解释$1')
+    .replace(/^Define (.+)/i, '请定义$1')
+    .replace(/^Name (.+)/i, '请列举$1')
+    .replace(/^List (.+)/i, '请列举$1')
+    .replace(/^True or False[:\s]*(.+)/i, '判断正误：$1')
+    .replace(/^Is there (.+?)\?/i, '是否有$1？')
+    .replace(/^Does the (.+?)\?/i, '$1是否？')
+    .replace(/^Are the (.+?)\?/i, '这些$1是否？')
+    .replace(/^Can the (.+?)\?/i, '$1能否？')
+    .replace(/^Is it (.+?)\?/i, '是否$1？');
+
+  // Phase 2: translate common answer patterns
+  r = r
+    .replace(/ in order to/gi, '为了')
+    .replace(/ in accordance with/gi, '按照')
+    .replace(/ in the event of/gi, '如果发生')
+    .replace(/ on the ground/gi, '在地面')
+    .replace(/ in flight/gi, '在空中')
+    .replace(/ must be/gi, '必须')
+    .replace(/ is provided by/gi, '由提供')
+    .replace(/ is controlled by/gi, '由控制')
+    .replace(/ is located in/gi, '位于')
+    .replace(/ is located on/gi, '位于')
+    .replace(/ is selected to/gi, '选择到')
+    .replace(/ is set to/gi, '设置为')
+    .replace(/ consists of/gi, '由以下组成')
+    .replace(/ is required/gi, '是必需的')
+    .replace(/ is armed/gi, '被预位')
+    .replace(/ typically /gi, '通常')
+    .replace(/ automatically/gi, '自动')
+    .replace(/ manually/gi, '人工')
+    .replace(/ approximately/gi, '大约')
+    .replace(/ normally/gi, '正常')
+    .replace(/ during flight/gi, '在飞行中')
+    .replace(/ during takeoff/gi, '在起飞时')
+    .replace(/ during landing/gi, '在着陆时')
+    .replace(/ and /gi, '并且')
+    .replace(/ or /gi, '或者')
+    .replace(/ if /gi, '如果')
+    .replace(/ when /gi, '当');
+
+  // Phase 3: translate technical terms via dictionary
+  for (const [en, cn] of ent) {
+    const re = new RegExp('\\b' + escRe(en) + '\\b', 'gi');
+    r = r.replace(re, cn);
   }
-  return result;
+  return r;
 }
 
 // ============================================
