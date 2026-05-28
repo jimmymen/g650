@@ -6,7 +6,7 @@
 <title>G650ER 干词选择题</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:'Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:#0a0e17;color:#e0e0e0;min-height:100vh;overflow-x:hidden}
+body{font-family:'Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif;background:#0a0e17;color:#e0e0e0;min-height:100vh;overflow-x:hidden;--fs:1}
 .header{background:linear-gradient(135deg,#0d1b2a,#1b2d45);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a3f5f}
 .header h1{font-size:15px;font-weight:600;color:#4fc3f7}
 .header .stats{display:flex;gap:12px;font-size:13px;color:#90a4ae;flex-wrap:wrap;justify-content:flex-end}
@@ -99,6 +99,10 @@ body{font-family:'Segoe UI','PingFang SC','Microsoft YaHei',system-ui,sans-serif
       <span>📅 <strong id="dueCards">0</strong></span>
       <span>❌ <strong id="wrongCards">0</strong></span>
       <span>🔥<strong id="streak">0</strong></span>
+      <span style="display:flex;gap:2px;margin-left:4px">
+        <button onclick="adjFont(-.15)" style="background:#1b2d45;border:1px solid #2a3f5f;color:#90a4ae;width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:13px;line-height:1;padding:0">A⁻</button>
+        <button onclick="adjFont(.15)" style="background:#1b2d45;border:1px solid #2a3f5f;color:#90a4ae;width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:13px;line-height:1;padding:0">A⁺</button>
+      </span>
     </div>
   </div>
 
@@ -1157,6 +1161,16 @@ let currentIdx = 0;
 let mode = "review";
 let answered = false;
 
+function loadFont() {
+  try { const v = parseFloat(localStorage.getItem("g650er_fs")); if (v > 0 && v <= 2) document.body.style.zoom = v; } catch(e) {}
+}
+function adjFont(d) {
+  const cur = parseFloat(document.body.style.zoom) || 1;
+  const nv = Math.min(2, Math.max(.7, +(cur + d).toFixed(2)));
+  document.body.style.zoom = nv;
+  try { localStorage.setItem("g650er_fs", nv); } catch(e) {}
+}
+
 function loadState() {
   try { const s = localStorage.getItem("g650er_quiz"); if (s) state = JSON.parse(s); } catch(e) {}
   if (!state.cards) state.cards = {};
@@ -1190,6 +1204,7 @@ function getDistractor(correctAnswer, section) {
 
 function initGame() {
   loadState();
+  loadFont();
   
   // Parse cards from QDATA
   if (typeof FULL_QDATA !== "undefined") {
