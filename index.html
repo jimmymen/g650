@@ -24,7 +24,7 @@ body{--fs:1;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',system-ui,san
 .pole-seg{transition:height .8s cubic-bezier(.4,0,.2,1)}
 .pole-mastered{background:linear-gradient(180deg,#66bb6a,#388e3c)}
 .pole-learning{background:linear-gradient(180deg,#42a5f5,#1565c0)}
-.pole-unstudied{background:#1b2d45;flex:1}
+.pole-unstudied{background:#1b2d45}
 .monkey{position:absolute;left:50%;transform:translateX(-50%);font-size:30px;transition:bottom .8s cubic-bezier(.4,0,.2,1);z-index:2;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
 .monkey.bounce{animation:monkeyBounce .4s ease}
 @keyframes monkeyBounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-10px)}}
@@ -141,9 +141,9 @@ body{--fs:1;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',system-ui,san
     <div class="pole-cap">&#127942;</div>
     <div class="pole-wrapper">
       <div class="pole">
-        <div class="pole-seg pole-mastered" id="poleMastered"></div>
+        <div class="pole-seg pole-unstudied" id="poleUnstudied"></div>
         <div class="pole-seg pole-learning" id="poleLearning"></div>
-        <div class="pole-seg pole-unstudied"></div>
+        <div class="pole-seg pole-mastered" id="poleMastered"></div>
       </div>
       <div class="monkey" id="monkey">&#128018;</div>
     </div>
@@ -1459,15 +1459,17 @@ function updateStats() {
   document.getElementById("wrongCards").textContent = wrong;
   document.getElementById("streak").textContent = calcStreak();
 
-  // Monkey pole segments
+  // Monkey pole segments (bottom→top: mastered → learning → unstudied)
   const pM = total > 0 ? (mastered / total * 100) : 0;
   const pL = total > 0 ? (learning / total * 100) : 0;
+  const pU = total > 0 ? Math.max(0, 100 - pM - pL) : 100;
   document.getElementById("poleMastered").style.height = pM + "%";
   document.getElementById("poleLearning").style.height = pL + "%";
-  // Monkey sits at top of learned section
+  document.getElementById("poleUnstudied").style.height = pU + "%";
+  // Monkey sits on top of learned section
   var monkeyEl = document.getElementById("monkey");
   if (monkeyEl) {
-    var mp = total > 0 ? Math.min(96, Math.max(2, learned / total * 100)) : 2;
+    var mp = total > 0 ? Math.min(96, Math.max(2, (pM + pL))) : 2;
     monkeyEl.style.bottom = mp + "%";
   }
 
