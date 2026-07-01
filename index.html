@@ -122,7 +122,7 @@ body{--fs:1;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',system-ui,san
 <body>
 
   <div class="header">
-    <h1>✈ G650ER 干词 <span style="font-size:calc(10px * var(--fs));color:#546e7a;font-weight:400">v1.3</span></h1>
+    <h1>✈ G650ER 干词 <span style="font-size:calc(10px * var(--fs));color:#546e7a;font-weight:400">v1.4</span></h1>
     <div class="stats">
       <span><strong id="learnedCards">0</strong>/<strong id="totalCards">0</strong></span>
       <span>🎓 <strong id="masteredCards">0</strong></span>
@@ -212,6 +212,7 @@ body{--fs:1;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',system-ui,san
       </div>
 
       <div class="btn-group" id="btnGroup">
+        <button class="btn" style="background:#1b2d45;color:#90a4ae;border:1px solid #2a3f5f;flex:0.6" onclick="prevCard()">&#9664; 上一题</button>
         <button class="btn btn-next" id="btnNext" onclick="nextCard()">&#9654; 下一题</button>
       </div>
       <div style="text-align:right;margin-top:8px">
@@ -1199,7 +1200,8 @@ function getNextReview(card, correct) {
 // ============================================
 let cards = [];
 let state = { cards: {} };
-let currentIdx = 0;
+let currentIdx = -1;
+let cardHistory = [];
 let mode = "review";
 let answered = false;
 
@@ -1269,6 +1271,8 @@ function initGame() {
 }
 
 function startGame() {
+  currentIdx = -1;
+  cardHistory = [];
   document.getElementById("welcome").style.display = "none";
   document.getElementById("gameArea").style.display = "block";
   nextCard();
@@ -1276,6 +1280,8 @@ function startGame() {
 
 function setMode(m) {
   mode = m;
+  currentIdx = -1;
+  cardHistory = [];
   document.getElementById("modeReview").className = m === "review" ? "active" : "";
   document.getElementById("modeWrong").className = m === "wrong" ? "active" : "";
   nextCard();
@@ -1300,7 +1306,6 @@ function nextCard() {
   }
 
   if (mode === "review") {
-    // 插入式学习: 到期优先, 新题穿插, 已学垫底
     const overdue = cards.filter(c => {
       const s = state.cards[c.n];
       return s && !s.mastered && s.next > 0 && s.next <= now;
@@ -1313,7 +1318,6 @@ function nextCard() {
       const s = state.cards[c.n];
       return s && !s.mastered && s.next > now;
     }).sort((a, b) => (state.cards[a.n]?.next || 0) - (state.cards[b.n]?.next || 0));
-    // 按权重池: overdue全入, new入最多3个, other入最多2个
     const pool = [...overdue, ...newCards.slice(0, 3), ...other.slice(0, 2)];
     candidates = pool;
   }
@@ -1323,8 +1327,19 @@ function nextCard() {
   const topN = Math.min(10, candidates.length);
   const pick = candidates[Math.floor(Math.random() * topN)];
   if (!pick) return;
+  if (currentIdx >= 0 && currentIdx < cards.length) {
+    cardHistory.push(cards[currentIdx]);
+    if (cardHistory.length > 50) cardHistory.shift();
+  }
   currentIdx = cards.indexOf(pick);
   displayCard(pick);
+}
+
+function prevCard() {
+  if (cardHistory.length === 0) return;
+  const prev = cardHistory.pop();
+  currentIdx = cards.indexOf(prev);
+  displayCard(prev);
 }
 
 function displayCard(card) {
@@ -1551,6 +1566,7 @@ document.addEventListener("keydown", function(e) {
   } else {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); nextCard(); }
   }
+  if (e.key === "ArrowLeft") { e.preventDefault(); prevCard(); }
 });
 
 // ============================================
