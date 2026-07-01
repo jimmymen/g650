@@ -214,6 +214,9 @@ body{--fs:1;font-family:'Segoe UI','PingFang SC','Microsoft YaHei',system-ui,san
       <div class="btn-group" id="btnGroup">
         <button class="btn btn-next" id="btnNext" onclick="nextCard()">&#9654; 下一题</button>
       </div>
+      <div style="text-align:right;margin-top:8px">
+        <button style="background:transparent;border:1px solid #3a2a1a;color:#8b6914;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:calc(10px * var(--fs));opacity:0.6;transition:opacity .2s" onmouseenter="this.style.opacity='1'" onmouseleave="this.style.opacity='0.6'" onclick="skipCard()" title="已掌握，不再复习">🎓 已掌握，跳过</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1439,6 +1442,25 @@ function pickOption(idx) {
   document.getElementById("btnNext").textContent = "继续 →";
   document.getElementById("btnNext").className = "btn btn-next";
   updateStats();
+}
+
+function skipCard() {
+  const cardN = parseInt(document.getElementById("card").dataset.currentCard);
+  const card = cards.find(c => c.n === cardN);
+  if (!card) return;
+  const cs = state.cards[card.n];
+  cs.interval = 60;
+  cs.rep = 6;
+  cs.ease = 2.5;
+  cs.next = Date.now() + 60 * 86400000;
+  cs.learned = true;
+  cs.mastered = true;
+  cs.lastReview = Date.now();
+  cs.score = (cs.score || 0) + 1;
+  if (cs.wrongCount === undefined) cs.wrongCount = 0;
+  saveState();
+  updateStats();
+  nextCard();
 }
 
 function updateStats() {
